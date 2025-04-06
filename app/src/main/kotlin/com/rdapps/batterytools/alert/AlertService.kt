@@ -25,8 +25,8 @@ import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.rdapps.batterytools.R
-import com.rdapps.batterytools.model.BatteryStats
-import com.rdapps.batterytools.model.ChargingState
+import com.rdapps.common.model.BatteryStats
+import com.rdapps.common.model.ChargingState
 import com.rdapps.batterytools.util.Store
 import com.rdapps.batterytools.util.parseBatteryStats
 import com.rdapps.batterytools.widget.BatteryStatsStateDefinition
@@ -146,9 +146,9 @@ class AlertService : LifecycleService() {
             val stats = batteryManager.parseBatteryStats(this@AlertService, intent)
             Log.d(TAG, "onReceive: charging status = ${stats.chargingState}")
 
-            when (stats.chargingState) {
+            when (val state = stats.chargingState) {
                 is ChargingState.Charging -> {
-                    Log.d(TAG, "onReceive: Charging ${stats.chargingState.source}")
+                    Log.d(TAG, "onReceive: Charging ${state.source}")
                     notificationManager.cancel(ALERT_NOTIFICATION_ID)
 
                     if (mediaPlayer.isPlaying)

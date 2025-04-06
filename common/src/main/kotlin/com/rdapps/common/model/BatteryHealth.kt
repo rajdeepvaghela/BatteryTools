@@ -1,4 +1,4 @@
-package com.rdapps.batterytools.model
+package com.rdapps.common.model
 
 import androidx.compose.runtime.Stable
 

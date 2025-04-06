@@ -42,21 +42,17 @@ import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
-import androidx.glance.text.FontFamily
-import androidx.glance.text.FontStyle
-import androidx.glance.text.FontWeight
-import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.rdapps.batterytools.R
 import com.rdapps.batterytools.alert.AlertService
 import com.rdapps.batterytools.main.MainActivity
-import com.rdapps.batterytools.model.BatteryStats
-import com.rdapps.batterytools.model.ChargingSource
-import com.rdapps.batterytools.model.ChargingState
+import com.rdapps.common.model.BatteryStats
+import com.rdapps.common.model.ChargingSource
+import com.rdapps.common.model.ChargingState
 import com.rdapps.batterytools.ui.theme.Color808080
 import com.rdapps.batterytools.util.GlanceText
-import com.rdapps.batterytools.util.getReadableTime
 import com.rdapps.batterytools.util.isServiceRunning
+import com.rdapps.common.utils.getReadableTime
 import java.text.DecimalFormat
 
 private const val TAG = "BatteryWidget"
@@ -119,7 +115,8 @@ fun BatteryWidgetView(batteryStats: BatteryStats) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (batteryStats.chargingState is ChargingState.Charging) {
+            val state = batteryStats.chargingState
+            if (state is ChargingState.Charging) {
                 val decimalFormat = remember {
                     DecimalFormat("#.##")
                 }
@@ -155,7 +152,7 @@ fun BatteryWidgetView(batteryStats: BatteryStats) {
                     )
                 }
 
-                val (iconRes, source) = when (batteryStats.chargingState.source) {
+                val (iconRes, source) = when (state.source) {
                     ChargingSource.USB -> Pair(R.drawable.usb, "USB")
                     ChargingSource.AC -> Pair(R.drawable.ac_adapter, "AC adapter")
                     ChargingSource.Wireless -> Pair(R.drawable.wireless, "Wireless pad")
@@ -168,10 +165,10 @@ fun BatteryWidgetView(batteryStats: BatteryStats) {
                         .padding(top = 10.dp)
                 )
 
-                if (batteryStats.chargingState.timeRemaining > 0) {
+                if (state.timeRemaining > 0) {
                     IconText(
                         iconRes = R.drawable.ic_round_time_24,
-                        text = getReadableTime(batteryStats.chargingState.timeRemaining),
+                        text = getReadableTime(state.timeRemaining),
                         modifier = GlanceModifier
                             .padding(top = 10.dp)
                     )

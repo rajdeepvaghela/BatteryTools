@@ -10,24 +10,14 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import com.rdapps.batterytools.alert.AlertService
-import com.rdapps.batterytools.model.BatteryHealth
-import com.rdapps.batterytools.model.BatteryStats
-import com.rdapps.batterytools.model.ChargingSource
-import com.rdapps.batterytools.model.ChargingState
-import com.rdapps.batterytools.model.VoltCurrent
+import com.rdapps.common.model.BatteryHealth
+import com.rdapps.common.model.BatteryStats
+import com.rdapps.common.model.ChargingSource
+import com.rdapps.common.model.ChargingState
+import com.rdapps.common.model.VoltCurrent
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.reflect.KClass
-
-fun getReadableTime(millis: Long): String {
-    val hours = TimeUnit.MILLISECONDS.toHours(millis)
-    val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(hours)
-    val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) -
-            TimeUnit.MINUTES.toSeconds(minutes) -
-            TimeUnit.HOURS.toSeconds(hours)
-
-    return "$hours h : $minutes min : $seconds sec"
-}
 
 @SuppressLint("PrivateApi")
 fun Context.getBatteryCapacity(): Int {

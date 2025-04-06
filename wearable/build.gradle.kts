@@ -6,16 +6,16 @@ plugins {
 }
 
 android {
-    namespace = "com.rdapps.batterytools"
+    namespace = "com.rdapps.wearable"
     compileSdk = 35
 
     defaultConfig {
         applicationId = "com.rdapps.batterytools"
-        minSdk = 34
+        minSdk = 30
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "DATASTORE_NAME", "\"DataStorePref-v1\"")
+
     }
 
     buildTypes {
@@ -36,7 +36,6 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
     kotlin {
         sourceSets.all {
@@ -48,21 +47,23 @@ android {
 dependencies {
     implementation(project(":common"))
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.bundles.compose)
-    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.play.services.wearable)
+    implementation("androidx.wear:wear-remote-interactions:1.1.0")
+    implementation("androidx.wear:wear-phone-interactions:1.1.0")
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.androidx.activity)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.biometric.ktx)
     implementation(libs.androidx.datastore.preferences)
 
-    implementation(libs.play.services.wearable)
-
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.bundles.compose)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.wear.tooling.preview)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.core.splashscreen)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }

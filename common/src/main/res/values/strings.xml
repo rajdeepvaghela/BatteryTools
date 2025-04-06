@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--    For Mobile-->
+    <string name="mobile_capability">send_battery_info</string>
+    <string name="message_battery_stats">/message_battery_stats</string>
+
+    <!--    For Wear-->
+    <string name="wearable_capability">receive_battery_info</string>
+
+</resources>

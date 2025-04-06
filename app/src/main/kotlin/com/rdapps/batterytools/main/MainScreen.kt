@@ -44,10 +44,10 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rdapps.batterytools.R
-import com.rdapps.batterytools.model.BatteryHealth
-import com.rdapps.batterytools.model.ChargingSource
-import com.rdapps.batterytools.model.ChargingState
-import com.rdapps.batterytools.model.VoltCurrent
+import com.rdapps.common.model.BatteryHealth
+import com.rdapps.common.model.ChargingSource
+import com.rdapps.common.model.ChargingState
+import com.rdapps.common.model.VoltCurrent
 import com.rdapps.batterytools.ui.theme.BatteryToolsTheme
 import com.rdapps.batterytools.ui.theme.Color261C90
 import com.rdapps.batterytools.ui.theme.Color808080

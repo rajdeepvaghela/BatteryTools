@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "BatteryTools"
 include(":app")
- 
+include(":wearable")
+include(":common")

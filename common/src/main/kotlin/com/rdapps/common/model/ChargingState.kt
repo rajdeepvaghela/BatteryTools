@@ -1,8 +1,7 @@
-package com.rdapps.batterytools.model
+package com.rdapps.common.model
 
 import androidx.compose.runtime.Stable
-import com.rdapps.batterytools.util.getReadableTime
-import com.rdapps.batterytools.model.ChargingSource
+import com.rdapps.common.utils.getReadableTime
 import kotlinx.serialization.Serializable
 
 @Stable

@@ -4,11 +4,11 @@ import android.app.Application
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.rdapps.batterytools.model.BatteryStats
-import com.rdapps.batterytools.model.ChargingSource
-import com.rdapps.batterytools.model.ChargingState
 import com.rdapps.batterytools.util.Store
 import com.rdapps.batterytools.widget.dataStore
+import com.rdapps.common.model.BatteryStats
+import com.rdapps.common.model.ChargingSource
+import com.rdapps.common.model.ChargingState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -24,10 +24,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val isAlertOnUsb: Boolean = false
     ) {
         val isAlertSettingEnabled: Boolean =
-            (batteryStat.chargingState is ChargingState.Charging) &&
-                    ((batteryStat.chargingState.source == ChargingSource.AC && isAlertOnAcCharger) ||
-                            (batteryStat.chargingState.source == ChargingSource.Wireless && isAlertOnWirelessCharger) ||
-                            (batteryStat.chargingState.source == ChargingSource.USB && isAlertOnUsb))
+            (((batteryStat.chargingState as? ChargingState.Charging)?.source == ChargingSource.AC && isAlertOnAcCharger) ||
+                    ((batteryStat.chargingState as? ChargingState.Charging)?.source == ChargingSource.Wireless && isAlertOnWirelessCharger) ||
+                    ((batteryStat.chargingState as? ChargingState.Charging)?.source == ChargingSource.USB && isAlertOnUsb))
 
     }
 
