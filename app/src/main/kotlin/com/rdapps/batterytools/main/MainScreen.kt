@@ -1,10 +1,15 @@
 package com.rdapps.batterytools.main
 
+import android.Manifest
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,10 +31,12 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -43,14 +50,19 @@ import androidx.constraintlayout.compose.ChainStyle
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import com.rdapps.batterytools.R
+import com.rdapps.batterytools.ui.theme.BatteryToolsTheme
+import com.rdapps.batterytools.ui.theme.Color261C90
+import com.rdapps.batterytools.ui.theme.Color808080
 import com.rdapps.common.model.BatteryHealth
 import com.rdapps.common.model.ChargingSource
 import com.rdapps.common.model.ChargingState
 import com.rdapps.common.model.VoltCurrent
-import com.rdapps.batterytools.ui.theme.BatteryToolsTheme
-import com.rdapps.batterytools.ui.theme.Color261C90
-import com.rdapps.batterytools.ui.theme.Color808080
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
 private const val TAG = "MainScreen"
@@ -59,13 +71,19 @@ sealed interface MainScreenViewEvent {
     object OnStartAlertClicked : MainScreenViewEvent
     object OnStopAlertClicked : MainScreenViewEvent
     object OnSettingsClicked : MainScreenViewEvent
+    object OnOpenNotificationSettingsClicked : MainScreenViewEvent
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MainScreen(onViewEvents: (MainScreenViewEvent) -> Unit) {
     val viewModel: MainViewModel = viewModel()
 
     val viewState by viewModel.viewStateFlow.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val vibrator = remember {
+        context.getSystemService(Vibrator::class.java)
+    }
 
     Box(
         modifier = Modifier
@@ -123,25 +141,79 @@ fun MainScreen(onViewEvents: (MainScreenViewEvent) -> Unit) {
                     .align(Alignment.CenterHorizontally)
                     .padding(bottom = 20.dp)
             ) {
-                if (viewState.batteryStat.isAlertEnabled) {
-                    Button(
-                        onClick = {
-                            onViewEvents(MainScreenViewEvent.OnStopAlertClicked)
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Red,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text(text = "Stop Alert", fontWeight = FontWeight.SemiBold)
-                    }
-                } else {
-                    Button(
-                        onClick = {
-                            onViewEvents(MainScreenViewEvent.OnStartAlertClicked)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (viewState.batteryStat.isAlertEnabled) {
+                        Button(
+                            onClick = {
+                                vibrator.vibrate(
+                                    VibrationEffect.createPredefined(
+                                        VibrationEffect.EFFECT_CLICK
+                                    )
+                                )
+                                onViewEvents(MainScreenViewEvent.OnStopAlertClicked)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Red,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text(text = "Stop Alert", fontWeight = FontWeight.SemiBold)
                         }
-                    ) {
-                        Text(text = "Start Alert", fontWeight = FontWeight.SemiBold)
+                    } else {
+                        Button(
+                            onClick = {
+                                vibrator.vibrate(
+                                    VibrationEffect.createPredefined(
+                                        VibrationEffect.EFFECT_CLICK
+                                    )
+                                )
+                                onViewEvents(MainScreenViewEvent.OnStartAlertClicked)
+                            }
+                        ) {
+                            Text(text = "Start Alert", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+
+                    val coroutineScope = rememberCoroutineScope()
+                    val permissionState =
+                        rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+
+                    when {
+                        permissionState.status.isGranted -> {
+                            // don't show
+                        }
+
+                        else -> {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Allow notifications to receive alerts",
+                                    fontWeight = FontWeight.Medium
+                                )
+
+                                Button(onClick = {
+                                    vibrator.vibrate(
+                                        VibrationEffect.createPredefined(
+                                            VibrationEffect.EFFECT_CLICK
+                                        )
+                                    )
+                                    if (permissionState.status.shouldShowRationale) {
+                                        coroutineScope.launch {
+                                            permissionState.launchPermissionRequest()
+                                        }
+                                    } else {
+                                        onViewEvents(MainScreenViewEvent.OnOpenNotificationSettingsClicked)
+                                    }
+                                }) {
+                                    Text(text = "Allow", fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -165,6 +237,11 @@ fun MainScreen(onViewEvents: (MainScreenViewEvent) -> Unit) {
                     indication = ripple(bounded = false),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
+                    vibrator.vibrate(
+                        VibrationEffect.createPredefined(
+                            VibrationEffect.EFFECT_CLICK
+                        )
+                    )
                     onViewEvents(MainScreenViewEvent.OnSettingsClicked)
                 }
                 .padding(10.dp)
@@ -262,62 +339,66 @@ fun ChargingStatsView(
     chargingState: ChargingState, voltCurrent: VoltCurrent, modifier: Modifier = Modifier
 ) {
     Log.d(TAG, "ChargingStatsView: composed")
-    when (val state = chargingState) {
-        is ChargingState.Charging -> {
+    AnimatedContent(
+        targetState = chargingState
+    ) { state ->
+        when (state) {
+            is ChargingState.Charging -> {
 
-            val (iconRes, source) = when (state.source) {
-                ChargingSource.USB -> Pair(R.drawable.usb, "USB")
-                ChargingSource.AC -> Pair(R.drawable.ac_adapter, "AC adapter")
-                ChargingSource.Wireless -> Pair(R.drawable.wireless, "Wireless pad")
-            }
-
-            val chargingText = buildAnnotatedString {
-                withStyle(style = SpanStyle(Color808080)) {
-                    append("Charging via ")
+                val (iconRes, source) = when (state.source) {
+                    ChargingSource.USB -> Pair(R.drawable.usb, "USB")
+                    ChargingSource.AC -> Pair(R.drawable.ac_adapter, "AC adapter")
+                    ChargingSource.Wireless -> Pair(R.drawable.wireless, "Wireless pad")
                 }
-                withStyle(style = SpanStyle(Color.Black)) {
-                    append(source)
-                }
-            }
 
-            Column(modifier = modifier.fillMaxWidth()) {
-                IconText(
-                    iconRes = iconRes,
-                    text = chargingText,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-
-                val remainingText = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color808080)) {
-                        append("Remaining Time: ")
+                val chargingText = buildAnnotatedString {
+                    withStyle(style = SpanStyle(Color808080)) {
+                        append("Charging via ")
                     }
-                    withStyle(style = SpanStyle(color = Color.Black)) {
-                        append(state.getReadableTimeRemaining())
+                    withStyle(style = SpanStyle(Color.Black)) {
+                        append(source)
                     }
                 }
-                Text(
-                    text = remainingText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(4.dp)
-                )
-                WattView(voltCurrent)
-            }
-        }
 
-        ChargingState.NotCharging -> {
-            Column(modifier = modifier.fillMaxWidth()) {
-                IconText(
-                    R.drawable.unplugged,
-                    "Discharging",
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-            }
-        }
+                Column(modifier = modifier.fillMaxWidth()) {
+                    IconText(
+                        iconRes = iconRes,
+                        text = chargingText,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
 
-        ChargingState.NA -> {}
+                    val remainingText = buildAnnotatedString {
+                        withStyle(style = SpanStyle(color = Color808080)) {
+                            append("Remaining Time: ")
+                        }
+                        withStyle(style = SpanStyle(color = Color.Black)) {
+                            append(state.getReadableTimeRemaining())
+                        }
+                    }
+                    Text(
+                        text = remainingText,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(4.dp)
+                    )
+                    WattView(voltCurrent)
+                }
+            }
+
+            ChargingState.NotCharging -> {
+                Column(modifier = modifier.fillMaxWidth()) {
+                    IconText(
+                        R.drawable.unplugged,
+                        "Discharging",
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                }
+            }
+
+            ChargingState.NA -> {}
+        }
     }
 }
 

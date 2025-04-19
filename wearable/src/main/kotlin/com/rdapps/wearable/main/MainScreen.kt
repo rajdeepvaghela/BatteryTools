@@ -117,30 +117,50 @@ fun BatteryDetails(batteryStats: BatteryStats) {
                     DecimalFormat("#.##")
                 }
 
-                // Use standard Compose Row
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    Text(
+                        text = "${batteryStats.currentCharge}",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.alignByBaseline()
+                    )
+
+                    Text(
+                        text = "%",
+                        color = Color808080,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .alignByBaseline()
+                            .padding(start = 4.dp)
+                    )
+                }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically // Added for better alignment within Row
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Call the converted IconText composable
                     IconText(
                         iconRes = CommonR.drawable.temperature,
                         text = "${batteryStats.temperature} °C",
-                        modifier = Modifier.weight(1f) // Use standard weight modifier
+                        modifier = Modifier.weight(1f)
                     )
                     IconText(
                         iconRes = CommonR.drawable.current,
                         text = "${batteryStats.voltCurrent.current} mA",
-                        modifier = Modifier.weight(1f) // Use standard weight modifier
+                        modifier = Modifier.weight(1f)
                     )
                 }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically // Added for alignment
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconText(
                         iconRes = CommonR.drawable.voltage,
@@ -174,13 +194,9 @@ fun BatteryDetails(batteryStats: BatteryStats) {
                     )
                 }
 
-                // Use standard Compose Spacer
                 Spacer(modifier = Modifier.height(10.dp))
             } else {
-                // Call the converted BatteryPercentView composable
                 BatteryPercentView(batteryStats.currentCharge, 60.sp)
-
-                // Add some space if needed, e.g., Spacer(modifier = Modifier.height(8.dp))
 
                 IconText(
                     iconRes = CommonR.drawable.temperature,

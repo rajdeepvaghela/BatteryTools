@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -70,6 +71,19 @@
             android:name=".alert.AlertService"
             android:exported="false"
             android:foregroundServiceType="specialUse" />
+
+        <service
+            android:name=".main.MessageListener"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:host="*"
+                    android:pathPrefix="@string/stop_alert"
+                    android:scheme="wear" />
+            </intent-filter>
+
+        </service>
     </application>
 
 </manifest>

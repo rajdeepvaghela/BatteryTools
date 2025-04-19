@@ -51,7 +51,7 @@ class AlertActivity : FragmentActivity() {
 
     private val stopActivityBroadcast = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            stopAlertAndExit()
+            finish()
         }
     }
 

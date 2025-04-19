@@ -19,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import com.rdapps.batterytools.alert.AlertService
 import com.rdapps.batterytools.ui.theme.BatteryToolsTheme
 import com.rdapps.batterytools.util.Store
+import com.rdapps.batterytools.widget.updateWidgetUI
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
@@ -81,6 +82,7 @@ class SettingsActivity : ComponentActivity() {
             is SettingsViewEvent.OnAcChargerAlertChanged -> {
                 lifecycleScope.launch {
                     Store.AlertOnAcCharger.set(this@SettingsActivity, event.acChargerAlert)
+                    updateWidgetUI()
                 }
             }
 
@@ -119,6 +121,7 @@ class SettingsActivity : ComponentActivity() {
             is SettingsViewEvent.OnUsbAlertChanged -> {
                 lifecycleScope.launch {
                     Store.AlertOnUsb.set(this@SettingsActivity, event.usbAlert)
+                    updateWidgetUI()
                 }
             }
 
@@ -128,6 +131,7 @@ class SettingsActivity : ComponentActivity() {
                         this@SettingsActivity,
                         event.wirelessChargerAlert
                     )
+                    updateWidgetUI()
                 }
             }
         }

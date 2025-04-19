@@ -4,8 +4,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import android.os.BatteryManager
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -106,6 +108,13 @@ class MainActivity : ComponentActivity() {
 
             MainScreenViewEvent.OnSettingsClicked -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
+            }
+
+            MainScreenViewEvent.OnOpenNotificationSettingsClicked -> {
+                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                }
+                startActivity(intent)
             }
         }
     }

@@ -24,20 +24,23 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.wearable.CapabilityClient
+import com.google.android.gms.wearable.Wearable
 import com.rdapps.batterytools.R
-import com.rdapps.common.model.BatteryStats
-import com.rdapps.common.model.ChargingState
 import com.rdapps.batterytools.util.Store
 import com.rdapps.batterytools.util.parseBatteryStats
 import com.rdapps.batterytools.widget.BatteryStatsStateDefinition
 import com.rdapps.batterytools.widget.BatteryWidget
 import com.rdapps.batterytools.widget.dataStore
 import com.rdapps.batterytools.widget.updateWidgetUI
+import com.rdapps.common.model.BatteryStats
+import com.rdapps.common.model.ChargingState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import com.rdapps.common.R as CommonR
 
 class AlertService : LifecycleService() {
 
@@ -55,6 +58,10 @@ class AlertService : LifecycleService() {
 
     private val audioManager by lazy {
         getSystemService(AudioManager::class.java)
+    }
+
+    private val capabilityClient by lazy {
+        Wearable.getCapabilityClient(this)
     }
 
     private val mediaPlayer by lazy {
@@ -165,6 +172,7 @@ class AlertService : LifecycleService() {
                     if (!mediaPlayer.isPlaying)
                         mediaPlayer.start()
 
+                    sendAlertToWatch()
                     showAlertNotification()
 
                     checkAndSendSms()
@@ -192,10 +200,31 @@ class AlertService : LifecycleService() {
     private fun adjustAlarmVolume(startAlert: Boolean) {
         if (startAlert) {
             savedAlarmVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
-//            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, 1, 0)
+            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
         } else {
             audioManager.setStreamVolume(AudioManager.STREAM_ALARM, savedAlarmVolume, 0)
+        }
+    }
+
+    private fun sendAlertToWatch() {
+        Log.d(TAG, "sendAlertToWatch: ")
+
+        capabilityClient.getCapability(
+            getString(CommonR.string.wearable_capability),
+            CapabilityClient.FILTER_ALL
+        ).addOnSuccessListener {
+            Log.d(TAG, "sendAlertToWatch: node count=${it.nodes.size}")
+            val node = it.nodes.firstOrNull() ?: return@addOnSuccessListener
+
+            Wearable.getMessageClient(this)
+                .sendMessage(
+                    node.id,
+                    getString(CommonR.string.alert),
+                    "alert".encodeToByteArray()
+                ).addOnSuccessListener {
+                    Log.d(TAG, "sendAlertToWatch: $it")
+                }
         }
     }
 

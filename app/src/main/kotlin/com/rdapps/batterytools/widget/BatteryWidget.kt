@@ -3,12 +3,12 @@ package com.rdapps.batterytools.widget
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
-import android.os.BatteryManager
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
@@ -23,12 +23,10 @@ import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
-import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.currentState
@@ -46,13 +44,17 @@ import androidx.glance.unit.ColorProvider
 import com.rdapps.batterytools.R
 import com.rdapps.batterytools.alert.AlertService
 import com.rdapps.batterytools.main.MainActivity
+import com.rdapps.batterytools.ui.theme.Color808080
+import com.rdapps.batterytools.util.GlanceText
+import com.rdapps.batterytools.util.Store
+import com.rdapps.batterytools.util.isServiceRunning
 import com.rdapps.common.model.BatteryStats
 import com.rdapps.common.model.ChargingSource
 import com.rdapps.common.model.ChargingState
-import com.rdapps.batterytools.ui.theme.Color808080
-import com.rdapps.batterytools.util.GlanceText
-import com.rdapps.batterytools.util.isServiceRunning
 import com.rdapps.common.utils.getReadableTime
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import java.text.DecimalFormat
 
 private const val TAG = "BatteryWidget"
@@ -98,8 +100,9 @@ class BatteryWidgetReceiver : GlanceAppWidgetReceiver() {
 @Composable
 fun BatteryWidgetView(batteryStats: BatteryStats) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val batteryManager = remember { context.getSystemService(BatteryManager::class.java) }
+    val vibrator = remember {
+        context.getSystemService(Vibrator::class.java)
+    }
 
     Box(
         modifier = GlanceModifier
@@ -176,31 +179,46 @@ fun BatteryWidgetView(batteryStats: BatteryStats) {
 
                 Spacer(modifier = GlanceModifier.height(10.dp))
 
-                if (!batteryStats.isAlertEnabled) {
-                    Button(
-                        text = "Start Alert",
-                        onClick = {
-                            val intent = Intent(context, AlertService::class.java)
-                            context.startForegroundService(intent)
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = ColorProvider(MaterialTheme.colorScheme.primary),
-                            contentColor = ColorProvider(MaterialTheme.colorScheme.onPrimary)
+                val isAlertSettingEnabled = runBlocking(Dispatchers.IO) {
+                    state.source.isAlertSettingEnabled(context)
+                }
+
+                if (isAlertSettingEnabled || batteryStats.isAlertEnabled) {
+                    if (batteryStats.isAlertEnabled) {
+                        Button(
+                            text = "Stop Alert",
+                            onClick = {
+                                vibrator.vibrate(
+                                    VibrationEffect.createPredefined(
+                                        VibrationEffect.EFFECT_CLICK
+                                    )
+                                )
+                                val intent = Intent(context, AlertService::class.java)
+                                context.stopService(intent)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = ColorProvider(Color.Red),
+                                contentColor = ColorProvider(Color.White)
+                            )
                         )
-                    )
-                } else {
-                    val context = LocalContext.current
-                    Button(
-                        text = "Stop Alert",
-                        onClick = {
-                            val intent = Intent(context, AlertService::class.java)
-                            context.stopService(intent)
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = ColorProvider(Color.Red),
-                            contentColor = ColorProvider(Color.White)
+                    } else {
+                        Button(
+                            text = "Start Alert",
+                            onClick = {
+                                vibrator.vibrate(
+                                    VibrationEffect.createPredefined(
+                                        VibrationEffect.EFFECT_CLICK
+                                    )
+                                )
+                                val intent = Intent(context, AlertService::class.java)
+                                context.startForegroundService(intent)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = ColorProvider(MaterialTheme.colorScheme.primary),
+                                contentColor = ColorProvider(MaterialTheme.colorScheme.onPrimary)
+                            )
                         )
-                    )
+                    }
                 }
 
             } else {
@@ -213,20 +231,6 @@ fun BatteryWidgetView(batteryStats: BatteryStats) {
             }
         }
     }
-}
-
-private suspend fun BatteryManager.updateAppWidget(stats: BatteryStats, context: Context) {
-    val manager = GlanceAppWidgetManager(context)
-    val glanceIds = manager.getGlanceIds(BatteryWidget::class.java)
-    glanceIds.forEach {
-        updateAppWidgetState(
-            context = context,
-            definition = BatteryStatsStateDefinition,
-            glanceId = it,
-            updateState = { stats }
-        )
-    }
-    context.updateWidgetUI()
 }
 
 @Composable
@@ -279,8 +283,16 @@ fun IconText(iconRes: Int, text: String, modifier: GlanceModifier = GlanceModifi
     }
 }
 
+private suspend fun ChargingSource.isAlertSettingEnabled(context: Context): Boolean {
+    return (this == ChargingSource.AC &&
+            Store.AlertOnAcCharger.getFlow<Boolean>(context).first()) ||
+            (this == ChargingSource.Wireless &&
+                    Store.AlertOnWirelessCharger.getFlow<Boolean>(context).first()) ||
+            (this == ChargingSource.USB && Store.AlertOnUsb.getFlow<Boolean>(context).first())
+}
+
 @Composable
 @Preview(showBackground = true)
 fun BatteryWidgetPreview() {
-//    BatteryWidgetView(BatteryStats(), GlanceId())
+    BatteryWidgetView(BatteryStats())
 }

@@ -1,7 +1,8 @@
 package com.rdapps.batterytools.settings
 
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,7 +49,10 @@ fun SettingsScreen(
     onViewEvent: (SettingsViewEvent) -> Unit
 ) {
     val viewState by viewStateFlow.collectAsStateWithLifecycle()
-
+    val context = LocalContext.current
+    val vibrator = remember {
+        context.getSystemService(Vibrator::class.java)
+    }
     Column(
         modifier = Modifier
             .systemBarsPadding()
@@ -65,6 +70,7 @@ fun SettingsScreen(
                 Switch(
                     checked = viewState.callOnAlert,
                     onCheckedChange = {
+                        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
                         onViewEvent(SettingsViewEvent.OnCallOnAlertChanged(it))
                     }
                 )
@@ -102,6 +108,7 @@ fun SettingsScreen(
                 Switch(
                     checked = viewState.smsOnAlert,
                     onCheckedChange = {
+                        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
                         onViewEvent(SettingsViewEvent.OnSmsOnAlertChanged(it))
                     }
                 )
@@ -140,6 +147,7 @@ fun SettingsScreen(
                 Checkbox(
                     checked = viewState.usbAlert,
                     onCheckedChange = {
+                        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
                         onViewEvent(SettingsViewEvent.OnUsbAlertChanged(it))
                     }
                 )
@@ -151,6 +159,7 @@ fun SettingsScreen(
                 Checkbox(
                     checked = viewState.wirelessChargerAlert,
                     onCheckedChange = {
+                        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
                         onViewEvent(SettingsViewEvent.OnWirelessChargerAlertChanged(it))
                     }
                 )
@@ -162,6 +171,7 @@ fun SettingsScreen(
                 Checkbox(
                     checked = viewState.acChargerAlert,
                     onCheckedChange = {
+                        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
                         onViewEvent(SettingsViewEvent.OnAcChargerAlertChanged(it))
                     }
                 )

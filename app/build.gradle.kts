@@ -14,7 +14,7 @@ android {
         minSdk = 34
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
         buildConfigField("String", "DATASTORE_NAME", "\"DataStorePref-v1\"")
     }
 
@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.play.services.wearable)
+    implementation("com.google.accompanist:accompanist-permissions:0.37.2")
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
