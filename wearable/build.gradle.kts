@@ -1,18 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
 
 android {
     namespace = "com.rdapps.wearable"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.rdapps.batterytools"
         minSdk = 30
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -31,16 +30,17 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
     kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+            freeCompilerArgs.add("-Xexplicit-backing-fields")
+        }
         sourceSets.all {
             languageSettings.enableLanguageFeature("ExplicitBackingFields")
         }
+    }
+    buildFeatures {
+        compose = true
     }
 }
 
@@ -48,8 +48,8 @@ dependencies {
     implementation(project(":common"))
 
     implementation(libs.play.services.wearable)
-    implementation("androidx.wear:wear-remote-interactions:1.1.0")
-    implementation("androidx.wear:wear-phone-interactions:1.1.0")
+    implementation(libs.androidx.wear.remote.interactions)
+    implementation(libs.androidx.wear.phone.interactions)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.datastore.preferences)
 

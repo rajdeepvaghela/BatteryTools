@@ -14,12 +14,16 @@ import com.rdapps.common.model.BatteryStats
 import com.rdapps.wearable.R
 import com.rdapps.wearable.alert.AlertActivity
 import com.rdapps.wearable.dataStore
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import com.rdapps.common.R as CommonR
 
 class MessageListener : WearableListenerService() {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onMessageReceived(event: MessageEvent) {
         super.onMessageReceived(event)
@@ -33,7 +37,7 @@ class MessageListener : WearableListenerService() {
                 val message = event.data.toString(Charsets.UTF_8)
                 val stats = Json.decodeFromString(BatteryStats.serializer(), message)
 
-                runBlocking(Dispatchers.IO) {
+                scope.launch {
                     dataStore.updateData {
                         stats
                     }
