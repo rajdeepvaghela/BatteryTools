@@ -188,7 +188,7 @@ class AlertService : LifecycleService() {
 
     private fun startAlertActivity() {
         startActivity(Intent(this, AlertActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION
+            flags = Intent.FLAG_ACTIVITY_NO_USER_ACTION
         })
     }
 
@@ -261,7 +261,7 @@ class AlertService : LifecycleService() {
 
     private fun getFullScreenIntent(context: Context): PendingIntent {
         val alertActivityIntent = Intent(context, AlertActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION
+            flags = Intent.FLAG_ACTIVITY_NO_USER_ACTION
         }
         return PendingIntent.getActivity(
             context,
