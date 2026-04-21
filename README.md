@@ -2,6 +2,24 @@
 
 BatteryTools is a security-focused Android application designed to prevent device theft by triggering a loud alarm and notifying emergency contacts the moment the device is unplugged from a power source. It features a seamless integration between the smartphone and Wear OS devices to ensure the user is alerted regardless of where their phone is.
 
+<table>
+  <tr>
+    <td rowspan="2" width="50%">
+      <img src="/screenshots/Battery_Tools.jpg" alt="App">
+    </td>
+    <td width="50%">
+      Wear OS
+      <img src="/screenshots/WearOS.png" alt="Watch">
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Homescreen Widget
+      <img src="/screenshots/Widget_Home.png" alt="Widget">
+    </td>
+  </tr>
+</table>
+
 ## 🚀 Key Features
 
 - **Anti-Theft Alarm**: Triggers a high-volume alarm sound immediately when the charging cable is disconnected.
