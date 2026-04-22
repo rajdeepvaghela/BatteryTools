@@ -13,12 +13,23 @@ android {
         minSdk = 30
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
+    }
 
+    signingConfigs {
+        create("release") {
+            System.getenv("KEYSTORE_FILE")?.let {
+                storeFile = file(it)
+            }
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("KEY_ALIAS")
+            keyPassword = System.getenv("KEY_PASSWORD")
+        }
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
