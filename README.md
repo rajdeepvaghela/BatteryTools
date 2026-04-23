@@ -1,4 +1,4 @@
-# BatteryTools [![Release](https://img.shields.io/github/v/release/rajdeepvaghela/BatteryTools)](https://github.com/rajdeepvaghela/BatteryTools/releases)
+# BatteryTools [![Release](https://img.shields.io/github/v/release/rajdeepvaghela/BatteryTools)](https://github.com/rajdeepvaghela/BatteryTools/releases/latest)
 
 BatteryTools is a security-focused Android application designed to prevent device theft by triggering a loud alarm and notifying emergency contacts the moment the device is unplugged from a power source. It features a seamless integration between the smartphone and Wear OS devices to ensure the user is alerted regardless of where their phone is.
 
