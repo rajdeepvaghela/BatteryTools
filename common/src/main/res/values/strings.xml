@@ -10,5 +10,6 @@
     <string name="message_battery_stats">/message_battery_stats</string>
     <string name="alert">/alert</string>
     <string name="stop_alert">/stop_alert</string>
+    <string name="fetch_battery_stats">/fetch_battery_stats</string>
 
 </resources>

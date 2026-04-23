@@ -6,18 +6,23 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.BatteryManager
+import android.util.Log
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+import com.google.android.gms.wearable.CapabilityClient
+import com.google.android.gms.wearable.Wearable
 import com.rdapps.batterytools.alert.AlertService
 import com.rdapps.common.model.BatteryHealth
 import com.rdapps.common.model.BatteryStats
 import com.rdapps.common.model.ChargingSource
 import com.rdapps.common.model.ChargingState
 import com.rdapps.common.model.VoltCurrent
+import kotlinx.serialization.json.Json
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.reflect.KClass
+import com.rdapps.common.R as CommonR
 
 @SuppressLint("PrivateApi")
 fun Context.getBatteryCapacity(): Int {
@@ -130,3 +135,25 @@ fun BiometricManager.checkBiometricAvailability(): Int {
 
 fun BiometricManager.canUseBiometric() =
     checkBiometricAvailability() == BiometricManager.BIOMETRIC_SUCCESS
+
+fun CapabilityClient.sendBatteryStats(context: Context, stats: BatteryStats) {
+    Log.d("CommonFunctions", "sendBatteryStats: ")
+
+    getCapability(
+        context.getString(CommonR.string.wearable_capability),
+        CapabilityClient.FILTER_ALL
+    ).addOnSuccessListener {
+        Log.d("CommonFunctions", "sendBatteryStats: node count=${it.nodes.size}")
+        val node = it.nodes.firstOrNull() ?: return@addOnSuccessListener
+
+        val data = Json.encodeToString(stats)
+        Wearable.getMessageClient(context)
+            .sendMessage(
+                node.id,
+                context.getString(CommonR.string.message_battery_stats),
+                data.encodeToByteArray()
+            ).addOnSuccessListener { messageId ->
+                Log.d("CommonFunctions", "sendBatteryStats: $messageId")
+            }
+    }
+}

@@ -7,6 +7,7 @@ import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import com.rdapps.batterytools.alert.AlertActivity
 import com.rdapps.batterytools.alert.AlertService
+import com.rdapps.batterytools.widget.BatteryStateMonitorService
 import com.rdapps.common.R as CommonR
 
 class MessageListener : WearableListenerService() {
@@ -24,6 +25,11 @@ class MessageListener : WearableListenerService() {
 
                 val broadcastIntent = Intent(AlertActivity.ACTION_STOP_ACTIVITY)
                 sendBroadcast(broadcastIntent)
+            }
+
+            getString(CommonR.string.fetch_battery_stats) -> {
+                val intent = Intent(this, BatteryStateMonitorService::class.java)
+                startService(intent)
             }
         }
     }

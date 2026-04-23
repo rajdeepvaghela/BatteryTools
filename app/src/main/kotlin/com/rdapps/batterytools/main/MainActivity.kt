@@ -4,10 +4,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.Uri
 import android.os.BatteryManager
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -22,12 +22,14 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.wearable.Wearable
 import com.rdapps.batterytools.alert.AlertService
 import com.rdapps.batterytools.settings.SettingsActivity
 import com.rdapps.batterytools.ui.theme.BatteryToolsTheme
 import com.rdapps.batterytools.util.getBatteryCapacity
 import com.rdapps.batterytools.util.isServiceRunning
 import com.rdapps.batterytools.util.parseBatteryStats
+import com.rdapps.batterytools.util.sendBatteryStats
 import com.rdapps.batterytools.widget.BatteryStateMonitorService
 import com.rdapps.batterytools.widget.BatteryWidget
 import com.rdapps.batterytools.widget.dataStore
@@ -48,10 +50,15 @@ class MainActivity : ComponentActivity() {
         Intent(this, AlertService::class.java)
     }
 
+    private val capabilityClient by lazy {
+        Wearable.getCapabilityClient(this)
+    }
+
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate: ")
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
                 Color.White.toArgb(),
@@ -78,21 +85,6 @@ class MainActivity : ComponentActivity() {
                 this@MainActivity, batteryChangeReceiver, this,
                 ContextCompat.RECEIVER_EXPORTED
             )
-        }
-
-        viewModel.updateBatteryCapacity(getBatteryCapacity())
-
-        lifecycleScope.launch {
-            updateWidgetUI()
-            val manager = GlanceAppWidgetManager(this@MainActivity)
-            val glanceIds = manager.getGlanceIds(BatteryWidget::class.java)
-            if (glanceIds.isNotEmpty() && !isServiceRunning(BatteryStateMonitorService::class))
-                startForegroundService(
-                    Intent(
-                        this@MainActivity,
-                        BatteryStateMonitorService::class.java
-                    )
-                )
         }
     }
 
@@ -124,10 +116,29 @@ class MainActivity : ComponentActivity() {
             intent ?: return
 
             lifecycleScope.launch {
-                dataStore.updateData {
-                    batteryManager.parseBatteryStats(this@MainActivity, intent)
-                }
+                val stats = batteryManager.parseBatteryStats(this@MainActivity, intent)
+                capabilityClient.sendBatteryStats(this@MainActivity, stats)
+                dataStore.updateData { stats }
             }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Log.d(TAG, "onStart: ")
+        viewModel.updateBatteryCapacity(getBatteryCapacity())
+
+        lifecycleScope.launch {
+            updateWidgetUI()
+            val manager = GlanceAppWidgetManager(this@MainActivity)
+            val glanceIds = manager.getGlanceIds(BatteryWidget::class.java)
+            if (glanceIds.isNotEmpty() && !isServiceRunning(BatteryStateMonitorService::class))
+                startForegroundService(
+                    Intent(
+                        this@MainActivity,
+                        BatteryStateMonitorService::class.java
+                    )
+                )
         }
     }
 

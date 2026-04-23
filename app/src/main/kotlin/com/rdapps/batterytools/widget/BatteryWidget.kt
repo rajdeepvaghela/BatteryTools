@@ -78,14 +78,24 @@ suspend fun Context.updateWidgetUI() {
 class BatteryWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = BatteryWidget()
 
-    private lateinit var serviceIntent: Intent
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: android.appwidget.AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        super.onUpdate(context, appWidgetManager, appWidgetIds)
+        if (!context.isServiceRunning(BatteryStateMonitorService::class)) {
+            val serviceIntent = Intent(context, BatteryStateMonitorService::class.java)
+            context.startForegroundService(serviceIntent)
+        }
+    }
 
     override fun onEnabled(context: Context?) {
         super.onEnabled(context)
         Log.d(TAG, "onEnabled: ")
         context ?: return
         if (!context.isServiceRunning(BatteryStateMonitorService::class)) {
-            serviceIntent = Intent(context, BatteryStateMonitorService::class.java)
+            val serviceIntent = Intent(context, BatteryStateMonitorService::class.java)
             context.startForegroundService(serviceIntent)
         }
     }
@@ -93,6 +103,7 @@ class BatteryWidgetReceiver : GlanceAppWidgetReceiver() {
     override fun onDisabled(context: Context?) {
         super.onDisabled(context)
         Log.d(TAG, "onDisabled: ")
+        val serviceIntent = Intent(context, BatteryStateMonitorService::class.java)
         context?.stopService(serviceIntent)
     }
 }

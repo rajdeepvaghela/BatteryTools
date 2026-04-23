@@ -55,9 +55,9 @@ class AlertActivity : FragmentActivity() {
                 .sendMessage(
                     node.id,
                     getString(CommonR.string.stop_alert),
-                    "stop_alert".encodeToByteArray()
-                ).addOnSuccessListener {
-                    Log.d(TAG, "stopAlertAndExit: $it")
+                    getString(CommonR.string.stop_alert).encodeToByteArray()
+                ).addOnSuccessListener { res ->
+                    Log.d(TAG, "stopAlertAndExit: $res")
                     finish()
                 }
         }

@@ -16,17 +16,13 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
-import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Wearable
 import com.rdapps.batterytools.R
 import com.rdapps.batterytools.main.MainActivity
 import com.rdapps.batterytools.util.parseBatteryStats
-import com.rdapps.common.model.BatteryStats
+import com.rdapps.batterytools.util.sendBatteryStats
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import com.rdapps.common.R as CommonR
 
 class BatteryStateMonitorService : LifecycleService() {
 
@@ -42,8 +38,8 @@ class BatteryStateMonitorService : LifecycleService() {
         getSystemService(NotificationManager::class.java)
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand: ")
+    override fun onCreate() {
+        super.onCreate()
         IntentFilter(Intent.ACTION_BATTERY_CHANGED).apply {
             ContextCompat.registerReceiver(
                 this@BatteryStateMonitorService, batteryChangeReceiver, this,
@@ -51,9 +47,14 @@ class BatteryStateMonitorService : LifecycleService() {
             )
         }
         attachForeground()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+        Log.d(TAG, "onStartCommand: ")
 
         batteryManager.getIntProperty(BatteryManager.BATTERY_PLUGGED_AC)
-        return super.onStartCommand(intent, flags, startId)
+        return START_STICKY
     }
 
     private fun attachForeground() {
@@ -73,7 +74,7 @@ class BatteryStateMonitorService : LifecycleService() {
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        val content = "Monitoring Battery for your widget"
+        val content = "Monitoring Battery for the widget or wearable"
 
         val notification = NotificationCompat.Builder(this, channel.id)
             .setSmallIcon(R.mipmap.ic_launcher_round)
@@ -100,10 +101,6 @@ class BatteryStateMonitorService : LifecycleService() {
         }
     }
 
-    private val nodeClient by lazy {
-        Wearable.getNodeClient(this)
-    }
-
     private val capabilityClient by lazy {
         Wearable.getCapabilityClient(this)
     }
@@ -121,29 +118,7 @@ class BatteryStateMonitorService : LifecycleService() {
             )
         }
         updateWidgetUI()
-        sendBatteryStats(stats)
-    }
-
-    private fun sendBatteryStats(stats: BatteryStats) {
-        Log.d(TAG, "sendBatteryStats: ")
-
-        capabilityClient.getCapability(
-            getString(CommonR.string.wearable_capability),
-            CapabilityClient.FILTER_ALL
-        ).addOnSuccessListener {
-            Log.d(TAG, "sendBatteryStats: node count=${it.nodes.size}")
-            val node = it.nodes.firstOrNull() ?: return@addOnSuccessListener
-
-            val data = Json.encodeToString(stats)
-            Wearable.getMessageClient(this)
-                .sendMessage(
-                    node.id,
-                    getString(CommonR.string.message_battery_stats),
-                    data.encodeToByteArray()
-                ).addOnSuccessListener {
-                    Log.d(TAG, "sendBatteryStats: $it")
-                }
-        }
+        capabilityClient.sendBatteryStats(this@BatteryStateMonitorService, stats)
     }
 
     override fun onDestroy() {

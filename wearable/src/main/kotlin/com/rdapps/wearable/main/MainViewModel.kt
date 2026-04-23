@@ -2,7 +2,6 @@ package com.rdapps.wearable.main
 
 import android.app.Application
 import android.util.Log
-import androidx.datastore.dataStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.wearable.CapabilityClient
@@ -22,6 +21,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app),
 
     private val context
         get() = getApplication<Application>().applicationContext
+
+    private val mobileAppCapability by lazy {
+        context.getString(R.string.mobile_capability)
+    }
 
     private val nodeClient by lazy {
         Wearable.getNodeClient(context)
@@ -44,8 +47,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app),
         field = MutableStateFlow(ViewState())
 
     init {
-        val mobileAppCapability = context.getString(R.string.mobile_capability)
-
         nodeClient.connectedNodes.addOnSuccessListener { nodeList ->
             viewStateFlow.update {
                 it.copy(
@@ -61,8 +62,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app),
             Log.d(TAG, "capabilityClient.getCapability: ${it?.nodes?.size}")
             val node = it?.nodes?.firstOrNull() ?: return@addOnSuccessListener
 
-            viewStateFlow.update {
-                it.copy(
+            viewStateFlow.update { state ->
+                state.copy(
                     connectedNode = node
                 )
             }
@@ -81,6 +82,37 @@ class MainViewModel(app: Application) : AndroidViewModel(app),
 
         addCloseable {
             capabilityClient.removeListener(this)
+        }
+    }
+
+    fun fetchBatteryStats(node: Node? = viewStateFlow.value.connectedNode) {
+        Log.d(TAG, "fetchBatteryStats: node: ${node?.id}")
+        fun sendMsg(node: Node) {
+            Wearable.getMessageClient(context)
+                .sendMessage(
+                    node.id,
+                    context.getString(R.string.fetch_battery_stats),
+                    context.getString(R.string.fetch_battery_stats).encodeToByteArray()
+                ).addOnSuccessListener { messageId ->
+                    Log.d(TAG, "fetchBatteryStats: $messageId")
+                }
+        }
+
+        node?.let(::sendMsg) ?: run {
+            capabilityClient.getCapability(
+                mobileAppCapability,
+                CapabilityClient.FILTER_REACHABLE
+            ).addOnSuccessListener {
+                Log.d(TAG, "capabilityClient.getCapability: ${it?.nodes?.size}")
+                val node = it?.nodes?.firstOrNull() ?: return@addOnSuccessListener
+
+                viewStateFlow.update { state ->
+                    state.copy(
+                        connectedNode = node
+                    )
+                }
+                sendMsg(node)
+            }
         }
     }
 
